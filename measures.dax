@@ -1,0 +1,124 @@
+// ============================================================
+// PATTERN 3: Dynamic help panel — in-dashboard user guidance
+// ============================================================
+// Two components:
+//   1. Instruction Types  — calculated table that feeds the slicer
+//   2. Dynamic Instructions — measure that returns help text
+//
+// Setup:
+//   - Add slicer using 'Instruction Types'[InstructionType]
+//   - Sort slicer by 'Instruction Types'[SortOrder]
+//   - Add a Card visual and assign Dynamic Instructions as its field
+// ============================================================
+
+
+// ------------------------------------------------------------
+// COMPONENT 1: Calculated table
+// Creates the slicer options. Add/remove rows to change topics.
+// Update the SWITCH SortOrder block to match any changes.
+// ------------------------------------------------------------
+
+Instruction Types = 
+VAR BaseTable = DATATABLE(
+    "InstructionType", STRING,
+    {
+        {"Quick start"},
+        {"Blank rows explained"},
+        {"Compare to overall data"},
+        {"Date filter vs. year view"},
+        {"What does this metric mean?"},
+        {"Why does my total look wrong?"}
+    }
+)
+RETURN
+ADDCOLUMNS(
+    BaseTable,
+    "SortOrder", SWITCH(
+        [InstructionType],
+        "Quick start", 1,
+        "Blank rows explained", 2,
+        "Compare to overall data", 3,
+        "Date filter vs. year view", 4,
+        "What does this metric mean?", 5,
+        "Why does my total look wrong?", 6
+    )
+)
+
+
+// ------------------------------------------------------------
+// COMPONENT 2: Dynamic Instructions measure
+// Returns help text based on slicer selection.
+// Replace content inside each SWITCH branch with your own text.
+// Add new branches to match any new rows added to the table.
+// ------------------------------------------------------------
+
+Dynamic Instructions = 
+VAR SelectedType = SELECTEDVALUE(
+    'Instruction Types'[InstructionType],
+    "Quick start"
+)
+RETURN
+SWITCH(
+    SelectedType,
+
+    "Quick start",
+        "QUICK START" & UNICHAR(10) & UNICHAR(10) &
+        "1. Select a metric from the Metric Selection box." & UNICHAR(10) & UNICHAR(10) &
+        "2. Choose how to break down your data using the Disaggregation filter." & UNICHAR(10) &
+        "   What demographic or group do you want to examine?" & UNICHAR(10) & UNICHAR(10) &
+        "3. Select a term or academic year from the date filter." & UNICHAR(10) & UNICHAR(10) &
+        "4. Your data will update automatically." & UNICHAR(10) & UNICHAR(10) &
+        "5. Use the bottom table to compare your data against the overall totals.",
+
+    "Blank rows explained",
+        "WHY IS THERE A BLANK ROW?" & UNICHAR(10) & UNICHAR(10) &
+        "A record appears in your activity data but could not be matched" & UNICHAR(10) &
+        "to a registered account in the system." & UNICHAR(10) & UNICHAR(10) &
+        "Common reasons:" & UNICHAR(10) &
+        "  - The entry was submitted without a complete ID." & UNICHAR(10) &
+        "  - The person interacted with your service but never completed registration." & UNICHAR(10) &
+        "  - A data entry error caused a mismatch between systems." & UNICHAR(10) & UNICHAR(10) &
+        "These records are real activity and should be counted — they simply" & UNICHAR(10) &
+        "cannot be linked to profile data like demographics or outcomes.",
+
+    "Compare to overall data",
+        "HOW TO COMPARE YOUR DATA TO OVERALL TOTALS" & UNICHAR(10) & UNICHAR(10) &
+        "This dashboard shows two tables:" & UNICHAR(10) & UNICHAR(10) &
+        "  TOP TABLE: Filtered to your selection." & UNICHAR(10) &
+        "  BOTTOM TABLE: Unfiltered — shows the full dataset for comparison." & UNICHAR(10) & UNICHAR(10) &
+        "Steps:" & UNICHAR(10) &
+        "1. Set your filters in the top table first." & UNICHAR(10) &
+        "2. The bottom table updates independently — apply different" & UNICHAR(10) &
+        "   filters there to narrow the comparison group." & UNICHAR(10) & UNICHAR(10) &
+        "Example: Your success rate is 72%. The overall rate is 68%." & UNICHAR(10) &
+        "That difference is meaningful — use it to tell your story.",
+
+    "Date filter vs. year view",
+        "TERM VIEW VS. ACADEMIC YEAR VIEW" & UNICHAR(10) & UNICHAR(10) &
+        "Term view: Shows data from a single selected term only." & UNICHAR(10) & UNICHAR(10) &
+        "Academic year view: Shows a broader picture." & UNICHAR(10) &
+        "Includes all activity from the full year and attaches full-year" & UNICHAR(10) &
+        "outcomes for anyone who appeared in that year's records." & UNICHAR(10) & UNICHAR(10) &
+        "Use Term view for operational questions." & UNICHAR(10) &
+        "Use Academic Year view to understand longer-term outcomes.",
+
+    "What does this metric mean?",
+        "METRIC DEFINITIONS" & UNICHAR(10) & UNICHAR(10) &
+        "Headcount: Unique individuals. Each person counted once." & UNICHAR(10) & UNICHAR(10) &
+        "Enrollment: Course sections enrolled in. One student in three" & UNICHAR(10) &
+        "courses = three enrollments." & UNICHAR(10) & UNICHAR(10) &
+        "Success rate: Percentage of enrollments ending in a passing grade." & UNICHAR(10) & UNICHAR(10) &
+        "Completion rate: Percentage of enrollments without a withdrawal." & UNICHAR(10) & UNICHAR(10) &
+        "Replace these with the definitions that apply to your dashboard.",
+
+    "Why does my total look wrong?",
+        "WHY DOES MY TOTAL LOOK DIFFERENT THAN EXPECTED?" & UNICHAR(10) & UNICHAR(10) &
+        "Common reasons:" & UNICHAR(10) & UNICHAR(10) &
+        "1. A slicer is still active — check all slicers on the page." & UNICHAR(10) & UNICHAR(10) &
+        "2. You are in Term view instead of Academic Year view (or vice versa)." & UNICHAR(10) & UNICHAR(10) &
+        "3. The blank row is excluded — blank records are real data." & UNICHAR(10) & UNICHAR(10) &
+        "4. The date range does not match what you expect." & UNICHAR(10) &
+        "   Confirm the selected term or year in the date filter.",
+
+    "Please select a topic from the list on the left."
+)
